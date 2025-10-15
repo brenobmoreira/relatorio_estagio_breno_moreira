@@ -1,0 +1,7 @@
+# build archives
+
+*.aux
+*.bbl
+*.blg
+*.brf
+*.fdb_latexmk
