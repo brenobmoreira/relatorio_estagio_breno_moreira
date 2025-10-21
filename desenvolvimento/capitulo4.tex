@@ -1,38 +1,70 @@
-\chapter{Capítulo 4}
+\chapter{Requisitos do projeto}
 
-Para solucionar o problema da complexidade e descentralização dos dados, foi projetada e desenvolvida uma arquitetura de software robusta, focada em automação, modularidade e escalabilidade. Este capítulo descreve conceitualmente a solução implementada, detalhando o fluxo de dados, a arquitetura do sistema e os componentes de software que o compõem. A metodologia adotada buscou o desacoplamento de responsabilidades e a configuração declarativa, permitindo que o sistema seja flexível e de fácil manutenção.
+Este capítulo descreve os requisitos do projeto definidos para a solução do pipeline. Os requisitos são classificados com gerais, funcionais ou não funcionais e representam as diretrizes que guiaram o desenvolvimento do sistema. O foco da implementação durante o periodo do estágio foi atender a este conjunto de requisitos.
 
-\section{Arquitetura geral e fluxo de dados}
+\section{Requisitos Gerais (RG)}
 
-A solução opera em um sistema de processamentos de dados em lote. O fluxo de informações foi desenhado seguindo um modelo de sepração entre camadas, conforme ilustrado na Figura \ref{fig:diagrama} e descritos nos passos abaixos: 
+\begin{itemize}
+  \item \textbf{RG1: Modularidade}
 
-\begin{figure}[H]
-  \centering
-  \caption{Diagrama do projeto}\label{fig:diagrama}
-  \includegraphics[width=1\linewidth]{imagens/diagrama.png}
-  \par
-  \footnotesize{Fonte: Documentos da empresa.}
-\end{figure}
+  A arquitetura do sistema deve ser modular, permitindo que diferentes pipelines sejam desenvolvidos, testados e implementados de forma indepentende.
 
-\subsection{Fontes e configurações}
+  \item \textbf{RG2: Configurabilidade}
+  
+  Os pipelines devem ser definidos de forma declarativa através dos arquivos de configurações (YAML e JSON).
 
-A parte inicial do sistema são as fontes de dados externa, que são acessadas através dos servidores FTP do DATASUS e da ANS, onde são disponibilizados os arquivos públicos.
+  \item \textbf{RG3: Integração com Nuvem}
+  
+  A solução deve utilizar o Azure Blob Storage como repositório para dados brutos e processados.
+\end{itemize}
 
-Os arquivos de configuração, acessados pelos orquestradores, contém informações essenciais para o pipeline. Através do $sources\_config.json$, obtemos todos os detalhes principais de cada fonte, e última vez que atualizamos esta base de dados. O $mapping.json$ é encarregado de informar quais fontes cada pipeline utiliza, para que possamos processar apenas os que tiveram uma fonte atualizada.
 
-\subsection{Automação e orquestração}
+\section{Requisitos Funcionais (RF)}
 
-Foi configurado para que o ciclo de processamento seja iniciado de forma autônoma duas vezes por més através do $update\_manager.py$, o agente que monitora continuamente as fontes de dados. Ao detectar um arquivo novo, é verificado quais pipelines serão processados, e em seguida realizado a chamada do $main.py$ para executar o orquestramento de cada um.
+\begin{itemize}
+  \item \textbf{RF1: Monitoramento automatizado de fontes}
 
-\subsection{Configuração do pipeline}
+  O sistema deve ser capaz de monitorar fontes de dados externas de forma automática, detectando arquivos novos ou atualizados baseados na última checagem.
 
-Cada pipeline é definido com um conjunto de arquivos de configuração. O $pipeline.yml$ atua como uma receita, onde especifica quais fontes devem ser lidas, a sequências de transformações em SQL a serem aplicadas e as tabelas finais a serem salvas.
-Enquanto o  $config.json$, detalha os aspectos técnicos de cada fonte, como o caminho bruto no Azure, delimitador e codificação de caracteres.
+  \item \textbf{RF2: Ingestão automatizada para data warehouse}
+  
+  Quando detectar um novo arquivo, o sistema deve ser capaz de realizar o download e carregar os dados brutos para o Azure.
 
-\subsection{Execução e transformação}
+  \item \textbf{RF3: Orquestração baseada em mapeamento}
+  
+  Deve ser utilizado um arquivo de mapeamento para a orquestração dos pipelines, que identifiquem qual pipeline processar baseado no arquivo atualizado e disparar sua execução.
 
-Quando iniciado, o $pipeline\_runner.py$ assume a execução. Através do DuckDB, ele é reponsável por ler os dados diretamente da camada bruta do Azure, a lógica da transformação contida nos scripts SQL, e então, executada em memória. Esta fase é a responsável pela limpeza, padronização, junção e enriquecimento dos dados.
+  \item \textbf{RF4: Leitura de diferentes formatos}
+  
+  O pipeline deve ser capaz de ler os arquivos brutos em diferentes formatos diretamente do Azure. (\.csv, \.xlsx, \.parquet, \.txt)
 
-\subsection{Armazenamento e processamento}
+  \item \textbf{RF5: Execução de SQL}
+  
+  O sistema deve ser capaz de executar os scripts em SQL parar poder realizar o tratamento dos dados.
 
-O motor de processamento é o DuckDB, escolhido pela alta performance em cargas grandes de trabalho. O armazenamento é gerenciado pelo Azure Blob Stora, que funciona como um Data Warehouse. No final do fluxo, os dados processados são carregados para o Azure, onde ficam disponívems em um formato otimizado para consumo por aplicações analíticas e pela plataforma de inteligência de mercado da LifesHub.
+  \item \textbf{RF6: Carga de arquivos processados}
+  
+  Ao final do pipeline, o sistema deve ser capaz de transformar os dados em arquivos processados e salvos no Azure.
+
+\end{itemize}
+
+\section{Requisitos Não Funcionais (RNF)}
+
+\begin{itemize}
+    \item \textbf{RNF1: Perfomance}
+    
+    O processamento das transformações deve ser eficiente e capaz de processar grandes volumes de dados de forma rápida.
+
+    \item \textbf{RNF2: Escalabilidade}
+    
+    A arquitetura baseada em nuvem deve permitir que o sistema escale horizontalmente para acomodar o crescimento do volume de dados e o número de pipelines.
+
+    \item \textbf{RNF3: Manutenibilidade}
+    
+    O sistema deve ser de fácil manutenção. A configuração via arquivos JSON e YAML é essencial para o sistema.
+
+    \item \textbf{RNF4: Automação}
+    
+    O sistema deve ser ser automatizado de ponta a ponta. Da detecção de novos dados até a carga dos arquivos processados.
+
+\end{itemize}
